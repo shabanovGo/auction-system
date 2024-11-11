@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS bids (
+    id SERIAL PRIMARY KEY,
+    auction_id INTEGER NOT NULL REFERENCES auctions(id),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    amount DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_bids_auction_id ON bids(auction_id);
+CREATE INDEX idx_bids_user_id ON bids(user_id);
