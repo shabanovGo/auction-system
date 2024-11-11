@@ -10,6 +10,8 @@ import (
     "auction-system/internal/config"
     "auction-system/internal/infrastructure/persistence/postgres"
     userUseCase "auction-system/internal/application/usecase/user"
+    lotUseCase "auction-system/internal/application/usecase/lot"
+    handler "auction-system/internal/interfaces/grpc/handler"
 )
 
 func main() {
@@ -31,6 +33,7 @@ func main() {
     }
 
     userRepo := postgres.NewUserRepository(db)
+    lotRepo := postgres.NewLotRepository(db)
 
     createUserUC := userUseCase.NewCreateUserUseCase(userRepo)
     getUserUC := userUseCase.NewGetUserUseCase(userRepo)
@@ -39,8 +42,13 @@ func main() {
     getAllUsersUC := userUseCase.NewGetAllUserUseCase(userRepo)
     updateBalanceUC := userUseCase.NewUpdateBalanceUseCase(userRepo)
 
-    application := app.NewApp(
-        cfg,
+    createLotUC := lotUseCase.NewCreateLotUseCase(lotRepo)
+    getLotUC := lotUseCase.NewGetLotUseCase(lotRepo)
+    updateLotUC := lotUseCase.NewUpdateLotUseCase(lotRepo)
+    deleteLotUC := lotUseCase.NewDeleteLotUseCase(lotRepo)
+    getLotsUC := lotUseCase.NewGetLotsUseCase(lotRepo)
+
+    userHandler := handler.NewUserHandler(
         createUserUC,
         getUserUC,
         updateUserUC,
@@ -48,6 +56,18 @@ func main() {
         getAllUsersUC,
         updateBalanceUC,
     )
+
+    lotHandler := handler.NewLotHandler(
+        createLotUC,
+        getLotUC,
+        updateLotUC,
+        deleteLotUC,
+        getLotsUC,
+    )
+
+    handlers := handler.NewHandlers(userHandler, lotHandler)
+
+    application := app.NewApp(cfg, handlers)
 
     log.Println("Starting application...")
     if err := application.Run(ctx); err != nil {

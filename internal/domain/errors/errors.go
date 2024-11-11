@@ -8,6 +8,8 @@ var (
     ErrUserAlreadyExists = errors.New("user with this email already exists")
     ErrInsufficientBalance = errors.New("insufficient balance")
     ErrInvalidInput     = errors.New("invalid input data")
+    ErrLotNotFound = errors.New("lot not found")
+    ErrInvalidPage = errors.New("invalid page parameters")
 )
 
 // Error types

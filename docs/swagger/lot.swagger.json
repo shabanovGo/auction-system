@@ -1,0 +1,345 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "lot.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "LotService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/lots": {
+      "get": {
+        "summary": "Получение списка лотов с пагинацией",
+        "operationId": "LotService_ListLots",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/auctionListLotsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pageSize",
+            "description": "Размер страницы",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageNumber",
+            "description": "Номер страницы",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "LotService"
+        ]
+      },
+      "post": {
+        "summary": "Создание нового лота",
+        "operationId": "LotService_CreateLot",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/auctionCreateLotResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/auctionCreateLotRequest"
+            }
+          }
+        ],
+        "tags": [
+          "LotService"
+        ]
+      }
+    },
+    "/api/v1/lots/{id}": {
+      "get": {
+        "summary": "Получение лота по ID",
+        "operationId": "LotService_GetLot",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/auctionGetLotResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "LotService"
+        ]
+      },
+      "delete": {
+        "summary": "Удаление лота",
+        "operationId": "LotService_DeleteLot",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/auctionDeleteLotResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "LotService"
+        ]
+      },
+      "put": {
+        "summary": "Обновление лота",
+        "operationId": "LotService_UpdateLot",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/auctionUpdateLotResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/LotServiceUpdateLotBody"
+            }
+          }
+        ],
+        "tags": [
+          "LotService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "LotServiceUpdateLotBody": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "startPrice": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "title": "Запрос на обновление лота"
+    },
+    "auctionCreateLotRequest": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "startPrice": {
+          "type": "number",
+          "format": "double"
+        },
+        "creatorId": {
+          "type": "string",
+          "format": "int64"
+        }
+      },
+      "title": "Запрос на создание лота"
+    },
+    "auctionCreateLotResponse": {
+      "type": "object",
+      "properties": {
+        "lot": {
+          "$ref": "#/definitions/auctionLot"
+        }
+      },
+      "title": "Ответ на создание лота"
+    },
+    "auctionDeleteLotResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "title": "Ответ на удаление лота"
+    },
+    "auctionGetLotResponse": {
+      "type": "object",
+      "properties": {
+        "lot": {
+          "$ref": "#/definitions/auctionLot"
+        }
+      },
+      "title": "Ответ на получение лота"
+    },
+    "auctionListLotsResponse": {
+      "type": "object",
+      "properties": {
+        "lots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/auctionLot"
+          },
+          "title": "Список лотов"
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Общее количество лотов"
+        }
+      },
+      "title": "Ответ со списком лотов"
+    },
+    "auctionLot": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "startPrice": {
+          "type": "number",
+          "format": "double"
+        },
+        "creatorId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Основная модель лота"
+    },
+    "auctionUpdateLotResponse": {
+      "type": "object",
+      "properties": {
+        "lot": {
+          "$ref": "#/definitions/auctionLot"
+        }
+      },
+      "title": "Ответ на обновление лота"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

@@ -16,113 +16,82 @@ import (
     
     "auction-system/internal/config"
     "auction-system/internal/interfaces/grpc/handler"
-    "auction-system/internal/application/usecase/user"
     pb "auction-system/pkg/api"
 )
 
 type App struct {
-    cfg         *config.Config
-    grpcServer  *grpc.Server
-    httpServer  *http.Server
-    userHandler *handler.UserHandler
+    cfg      *config.Config
+    handlers *handler.Handlers
+    grpcServer *grpc.Server
+    httpServer *http.Server
 }
 
-func NewApp(cfg *config.Config, 
-    createUserUC *user.CreateUserUseCase,
-    getUserUC *user.GetUserUseCase,
-    updateUserUC *user.UpdateUserUseCase,
-    deleteUserUC *user.DeleteUserUseCase,
-    getAllUsersUC *user.GetAllUserUseCase,
-    updateBalanceUC *user.UpdateBalanceUseCase,
+func NewApp(
+    cfg *config.Config,
+    handlers *handler.Handlers,
 ) *App {
-    userHandler := handler.NewUserHandler(
-        createUserUC,
-        getUserUC,
-        updateUserUC,
-        deleteUserUC,
-        getAllUsersUC,
-        updateBalanceUC,
-    )
-
     return &App{
-        cfg:         cfg,
-        userHandler: userHandler,
+        cfg:      cfg,
+        handlers: handlers,
     }
 }
 
 func (a *App) Run(ctx context.Context) error {
-    ctx, cancel := context.WithCancel(ctx)
-    defer cancel()
-
-    go func() {
-        if err := a.runGRPCServer(); err != nil {
-            log.Printf("Failed to run gRPC server: %v", err)
-            cancel()
-        }
-    }()
-
-    go func() {
-        if err := a.runHTTPServer(ctx); err != nil && err != http.ErrServerClosed {
-            log.Printf("Failed to run HTTP server: %v", err)
-            cancel()
-        }
-    }()
-
-    quit := make(chan os.Signal, 1)
-    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-
-    select {
-    case <-ctx.Done():
-        return ctx.Err()
-    case sig := <-quit:
-        log.Printf("Received signal: %v", sig)
-    }
-
-    return a.shutdown(ctx)
-}
-
-func (a *App) runGRPCServer() error {
-    listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", a.cfg.GRPC.Host, a.cfg.GRPC.Port))
-    if err != nil {
-        return fmt.Errorf("failed to listen: %v", err)
-    }
-
+    // Настройка gRPC сервера
     a.grpcServer = grpc.NewServer()
-    pb.RegisterUserServiceServer(a.grpcServer, a.userHandler)
+    pb.RegisterUserServiceServer(a.grpcServer, a.handlers.UserHandler)
+    pb.RegisterLotServiceServer(a.grpcServer, a.handlers.LotHandler)
 
-    log.Printf("Starting gRPC server on %s:%d", a.cfg.GRPC.Host, a.cfg.GRPC.Port)
-    return a.grpcServer.Serve(listener)
-}
+    // Запуск gRPC сервера
+    grpcListener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", a.cfg.GRPC.Host, a.cfg.GRPC.Port))
+    if err != nil {
+        return fmt.Errorf("failed to listen grpc: %v", err)
+    }
 
-func (a *App) runHTTPServer(ctx context.Context) error {
+    go func() {
+        log.Printf("Starting gRPC server on %s:%d", a.cfg.GRPC.Host, a.cfg.GRPC.Port)
+        if err := a.grpcServer.Serve(grpcListener); err != nil {
+            log.Fatalf("Failed to serve gRPC: %v", err)
+        }
+    }()
+
+    // Настройка HTTP сервера с gRPC-Gateway
     mux := runtime.NewServeMux()
     opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-
+    
     endpoint := fmt.Sprintf("%s:%d", a.cfg.GRPC.Host, a.cfg.GRPC.Port)
+    
     if err := pb.RegisterUserServiceHandlerFromEndpoint(ctx, mux, endpoint, opts); err != nil {
-        return fmt.Errorf("failed to register gateway: %v", err)
+        return fmt.Errorf("failed to register user service handler: %v", err)
+    }
+    
+    if err := pb.RegisterLotServiceHandlerFromEndpoint(ctx, mux, endpoint, opts); err != nil {
+        return fmt.Errorf("failed to register lot service handler: %v", err)
     }
 
     a.httpServer = &http.Server{
-        Addr:         fmt.Sprintf("%s:%d", a.cfg.HTTP.Host, a.cfg.HTTP.Port),
-        Handler:      mux,
-        ReadTimeout:  a.cfg.Server.ReadTimeout,
-        WriteTimeout: a.cfg.Server.WriteTimeout,
+        Addr:    fmt.Sprintf("%s:%d", a.cfg.HTTP.Host, a.cfg.HTTP.Port),
+        Handler: mux,
     }
 
-    log.Printf("Starting HTTP server on %s:%d", a.cfg.HTTP.Host, a.cfg.HTTP.Port)
-    return a.httpServer.ListenAndServe()
-}
-
-func (a *App) shutdown(ctx context.Context) error {
-    if a.httpServer != nil {
-        if err := a.httpServer.Shutdown(ctx); err != nil {
-            log.Printf("Failed to shutdown HTTP server: %v", err)
+    // Запуск HTTP сервера
+    go func() {
+        log.Printf("Starting HTTP server on %s:%d", a.cfg.HTTP.Host, a.cfg.HTTP.Port)
+        if err := a.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+            log.Fatalf("Failed to serve HTTP: %v", err)
         }
-    }
+    }()
 
-    if a.grpcServer != nil {
-        a.grpcServer.GracefulStop()
+    // Graceful shutdown
+    quit := make(chan os.Signal, 1)
+    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+    <-quit
+
+    log.Println("Shutting down servers...")
+
+    a.grpcServer.GracefulStop()
+    if err := a.httpServer.Shutdown(ctx); err != nil {
+        log.Printf("HTTP server shutdown error: %v", err)
     }
 
     return nil

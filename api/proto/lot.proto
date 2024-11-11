@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package auction;
+
+option go_package = "auction-system/pkg/api";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+// Сервис для работы с лотами
+service LotService {
+    // Создание нового лота
+    rpc CreateLot(CreateLotRequest) returns (CreateLotResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/lots"
+            body: "*"
+        };
+    }
+    
+    // Получение лота по ID
+    rpc GetLot(GetLotRequest) returns (GetLotResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/lots/{id}"
+        };
+    }
+    
+    // Обновление лота
+    rpc UpdateLot(UpdateLotRequest) returns (UpdateLotResponse) {
+        option (google.api.http) = {
+            put: "/api/v1/lots/{id}"
+            body: "*"
+        };
+    }
+    
+    // Удаление лота
+    rpc DeleteLot(DeleteLotRequest) returns (DeleteLotResponse) {
+        option (google.api.http) = {
+            delete: "/api/v1/lots/{id}"
+        };
+    }
+    
+    // Получение списка лотов с пагинацией
+    rpc ListLots(ListLotsRequest) returns (ListLotsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/lots"
+        };
+    }
+}
+
+// Основная модель лота
+message Lot {
+    int64 id = 1;
+    string title = 2;
+    string description = 3;
+    double start_price = 4;
+    int64 creator_id = 5;
+    google.protobuf.Timestamp created_at = 6;
+    google.protobuf.Timestamp updated_at = 7;
+}
+
+// Запрос на создание лота
+message CreateLotRequest {
+    string title = 1;
+    string description = 2;
+    double start_price = 3;
+    int64 creator_id = 4;
+}
+
+// Ответ на создание лота
+message CreateLotResponse {
+    Lot lot = 1;
+}
+
+// Запрос на получение лота
+message GetLotRequest {
+    int64 id = 1;
+}
+
+// Ответ на получение лота
+message GetLotResponse {
+    Lot lot = 1;
+}
+
+// Запрос на обновление лота
+message UpdateLotRequest {
+    int64 id = 1;
+    string title = 2;
+    string description = 3;
+    double start_price = 4;
+}
+
+// Ответ на обновление лота
+message UpdateLotResponse {
+    Lot lot = 1;
+}
+
+// Запрос на удаление лота
+message DeleteLotRequest {
+    int64 id = 1;
+}
+
+// Ответ на удаление лота
+message DeleteLotResponse {
+    bool success = 1;
+}
+
+// Запрос на получение списка лотов
+message ListLotsRequest {
+    int32 page_size = 1;  // Размер страницы
+    int32 page_number = 2; // Номер страницы
+}
+
+// Ответ со списком лотов
+message ListLotsResponse {
+    repeated Lot lots = 1;      // Список лотов
+    int32 total_count = 2;      // Общее количество лотов
+}
