@@ -1,7 +1,6 @@
 echo "# Environment files
 .env
 .env*
-!.env.example
 
 # Binaries
 bin/

@@ -21,6 +21,4 @@ RUN adduser -D -g '' appuser && \
 
 USER appuser
 
-EXPOSE 50051
-
 CMD ["./auction"]

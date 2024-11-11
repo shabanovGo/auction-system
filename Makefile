@@ -39,6 +39,11 @@ migrate: recreate-db
 		docker exec -i $$(docker ps -q -f name=postgres) psql -U $(DB_USER) -d $(DB_NAME) < $$file; \
 	done
 
+seed:
+	@echo "Seeding database..."
+	docker exec -i $$(docker ps -q -f name=postgres) psql -U $(DB_USER) -d $(DB_NAME) < scripts/seed.sql
+	@echo "Database seeded successfully!"
+
 PROTO_DIR=api/proto
 GO_OUT_DIR=pkg/api
 
@@ -48,12 +53,18 @@ install-proto-deps:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
 
-gen-proto: install-proto-deps
+gen-proto:
 	mkdir -p $(GO_OUT_DIR)
+	mkdir -p docs/swagger
 	protoc -I $(PROTO_DIR) \
+		-I third_party \
+		-I $(shell go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway/v2) \
 		--go_out=$(GO_OUT_DIR) --go_opt=paths=source_relative \
 		--go-grpc_out=$(GO_OUT_DIR) --go-grpc_opt=paths=source_relative \
+		--grpc-gateway_out=$(GO_OUT_DIR) --grpc-gateway_opt=paths=source_relative \
+		--openapiv2_out=docs/swagger \
 		$(PROTO_DIR)/*.proto
 
 restart-app:
@@ -65,6 +76,8 @@ app-logs:
 db-logs:
 	$(DC) logs -f postgres
 
-start: build up migrate
+start: build up migrate seed
+
+reset-db: recreate-db migrate seed
 
 .DEFAULT_GOAL := start
