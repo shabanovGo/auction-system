@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "50051:50051"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - GRPC_HOST=0.0.0.0
+      - GRPC_PORT=50051
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=auction_user
+      - DB_PASSWORD=auction_password
+      - DB_NAME=auction_db
+      - DB_SSLMODE=disable
+    networks:
+      - auction-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=auction_user
+      - POSTGRES_PASSWORD=auction_password
+      - POSTGRES_DB=auction_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auction_user -d auction_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - auction-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  auction-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

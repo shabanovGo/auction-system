@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS auctions (
     id SERIAL PRIMARY KEY,
     lot_id INTEGER NOT NULL,
     start_price DECIMAL(10,2) NOT NULL,
+    min_step DECIMAL(10,2) NOT NULL,
     current_price DECIMAL(10,2) NOT NULL,
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
     end_time TIMESTAMP WITH TIME ZONE NOT NULL,
