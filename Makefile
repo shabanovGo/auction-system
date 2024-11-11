@@ -39,6 +39,23 @@ migrate: recreate-db
 		docker exec -i $$(docker ps -q -f name=postgres) psql -U $(DB_USER) -d $(DB_NAME) < $$file; \
 	done
 
+PROTO_DIR=api/proto
+GO_OUT_DIR=pkg/api
+
+.PHONY: gen-proto install-proto-deps
+
+install-proto-deps:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+
+gen-proto: install-proto-deps
+	mkdir -p $(GO_OUT_DIR)
+	protoc -I $(PROTO_DIR) \
+		--go_out=$(GO_OUT_DIR) --go_opt=paths=source_relative \
+		--go-grpc_out=$(GO_OUT_DIR) --go-grpc_opt=paths=source_relative \
+		$(PROTO_DIR)/*.proto
+
 restart-app:
 	$(DC) restart app
 

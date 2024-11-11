@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package api;
+
+option go_package = "auction-system/pkg/api";
+
+import "google/protobuf/timestamp.proto";
+
+service UserService {
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+    rpc GetUser(GetUserRequest) returns (GetUserResponse);
+    rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+    rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+    rpc UpdateBalance(UpdateBalanceRequest) returns (UpdateBalanceResponse);
+}
+
+message User {
+    int64 id = 1;
+    string username = 2;
+    string email = 3;
+    double balance = 4;
+    google.protobuf.Timestamp created_at = 5;
+    google.protobuf.Timestamp updated_at = 6;
+}
+
+message CreateUserRequest {
+    string username = 1;
+    string email = 2;
+}
+
+message CreateUserResponse {
+    User user = 1;
+}
+
+message GetUserRequest {
+    int64 id = 1;
+}
+
+message GetUserResponse {
+    User user = 1;
+}
+
+message UpdateUserRequest {
+    int64 id = 1;
+    string username = 2;
+    string email = 3;
+}
+
+message UpdateUserResponse {
+    User user = 1;
+}
+
+message DeleteUserRequest {
+    int64 id = 1;
+}
+
+message DeleteUserResponse {
+    bool success = 1;
+}
+
+message ListUsersRequest {
+    int32 page_size = 1;
+    int32 page_number = 2;
+}
+
+message ListUsersResponse {
+    repeated User users = 1;
+    int32 total_count = 2;
+}
+
+message UpdateBalanceRequest {
+    int64 user_id = 1;
+    double amount = 2;
+}
+
+message UpdateBalanceResponse {
+    User user = 1;
+}
