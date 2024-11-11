@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS lots (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    start_price DECIMAL(10,2) NOT NULL,
+    creator_id INTEGER NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_lots_creator_id ON lots(creator_id);
