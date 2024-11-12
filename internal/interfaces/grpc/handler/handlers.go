@@ -2,18 +2,18 @@ package handler
 
 type Handlers struct {
     UserHandler    *UserHandler
-    // AuctionHandler *AuctionHandler
+    AuctionHandler *AuctionHandler
     LotHandler     *LotHandler
 }
 
 func NewHandlers(
     userHandler *UserHandler,
-    // auctionHandler *AuctionHandler,
+    auctionHandler *AuctionHandler,
     lotHandler *LotHandler,
 ) *Handlers {
     return &Handlers{
         UserHandler: userHandler,
-        // AuctionHandler: auctionHandler,
+        AuctionHandler: auctionHandler,
         LotHandler:     lotHandler,
     }
 }

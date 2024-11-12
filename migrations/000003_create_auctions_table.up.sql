@@ -1,3 +1,11 @@
+CREATE TYPE AuctionStatus AS ENUM (
+    'PENDING',
+    'ACTIVE',
+    'ENDED',
+    'COMPLETED',
+    'CANCELED'
+);
+
 CREATE TABLE IF NOT EXISTS auctions (
     id SERIAL PRIMARY KEY,
     lot_id INTEGER NOT NULL,
@@ -6,6 +14,7 @@ CREATE TABLE IF NOT EXISTS auctions (
     current_price DECIMAL(10,2) NOT NULL,
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
     end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    status AuctionStatus NOT NULL DEFAULT 'PENDING',
     winner_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     winner_bid_id INTEGER,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,

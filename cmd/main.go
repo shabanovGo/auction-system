@@ -11,6 +11,7 @@ import (
     "auction-system/internal/infrastructure/persistence/postgres"
     userUseCase "auction-system/internal/application/usecase/user"
     lotUseCase "auction-system/internal/application/usecase/lot"
+	auctionUseCase "auction-system/internal/application/usecase/auction"
     handler "auction-system/internal/interfaces/grpc/handler"
 )
 
@@ -34,6 +35,7 @@ func main() {
 
     userRepo := postgres.NewUserRepository(db)
     lotRepo := postgres.NewLotRepository(db)
+    auctionRepo := postgres.NewAuctionRepository(db)
 
     createUserUC := userUseCase.NewCreateUserUseCase(userRepo)
     getUserUC := userUseCase.NewGetUserUseCase(userRepo)
@@ -47,6 +49,12 @@ func main() {
     updateLotUC := lotUseCase.NewUpdateLotUseCase(lotRepo)
     deleteLotUC := lotUseCase.NewDeleteLotUseCase(lotRepo)
     getLotsUC := lotUseCase.NewGetLotsUseCase(lotRepo)
+
+	createAuctionUC := auctionUseCase.NewCreateAuctionUseCase(auctionRepo, lotRepo)
+	getAuctionUC := auctionUseCase.NewGetAuctionUseCase(auctionRepo)
+    updateAuctionUC := auctionUseCase.NewUpdateAuctionUseCase(auctionRepo)
+    listAuctionsUC := auctionUseCase.NewListAuctionsUseCase(auctionRepo)
+
 
     userHandler := handler.NewUserHandler(
         createUserUC,
@@ -65,7 +73,15 @@ func main() {
         getLotsUC,
     )
 
-    handlers := handler.NewHandlers(userHandler, lotHandler)
+	auctionHandler := handler.NewAuctionHandler(
+        createAuctionUC,
+        getAuctionUC,
+        updateAuctionUC,
+        listAuctionsUC,
+    )
+
+
+    handlers := handler.NewHandlers(userHandler, auctionHandler, lotHandler)
 
     application := app.NewApp(cfg, handlers)
 

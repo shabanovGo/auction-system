@@ -37,12 +37,13 @@ func NewApp(
 }
 
 func (a *App) Run(ctx context.Context) error {
-    // Настройка gRPC сервера
     a.grpcServer = grpc.NewServer()
     pb.RegisterUserServiceServer(a.grpcServer, a.handlers.UserHandler)
     pb.RegisterLotServiceServer(a.grpcServer, a.handlers.LotHandler)
+    pb.RegisterAuctionServiceServer(a.grpcServer, a.handlers.AuctionHandler)
+    // pb.RegisterBidServiceServer(a.grpcServer, a.handlers.BidHandler)
+		
 
-    // Запуск gRPC сервера
     grpcListener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", a.cfg.GRPC.Host, a.cfg.GRPC.Port))
     if err != nil {
         return fmt.Errorf("failed to listen grpc: %v", err)
@@ -55,7 +56,6 @@ func (a *App) Run(ctx context.Context) error {
         }
     }()
 
-    // Настройка HTTP сервера с gRPC-Gateway
     mux := runtime.NewServeMux()
     opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
     
@@ -69,12 +69,19 @@ func (a *App) Run(ctx context.Context) error {
         return fmt.Errorf("failed to register lot service handler: %v", err)
     }
 
+    if err := pb.RegisterAuctionServiceHandlerFromEndpoint(ctx, mux, endpoint, opts); err != nil {
+        return fmt.Errorf("failed to register auction service handler: %v", err)
+    }
+
+    // if err := pb.RegisterBidServiceHandlerFromEndpoint(ctx, mux, endpoint, opts); err != nil {
+    //     return fmt.Errorf("failed to register bid service handler: %v", err)
+    // }
+
     a.httpServer = &http.Server{
         Addr:    fmt.Sprintf("%s:%d", a.cfg.HTTP.Host, a.cfg.HTTP.Port),
         Handler: mux,
     }
 
-    // Запуск HTTP сервера
     go func() {
         log.Printf("Starting HTTP server on %s:%d", a.cfg.HTTP.Host, a.cfg.HTTP.Port)
         if err := a.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -82,7 +89,6 @@ func (a *App) Run(ctx context.Context) error {
         }
     }()
 
-    // Graceful shutdown
     quit := make(chan os.Signal, 1)
     signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
     <-quit

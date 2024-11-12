@@ -1,0 +1,333 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "auction.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "AuctionService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/auctions": {
+      "get": {
+        "operationId": "AuctionService_ListAuctions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/auctionListAuctionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AuctionService"
+        ]
+      },
+      "post": {
+        "operationId": "AuctionService_CreateAuction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/auctionCreateAuctionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/auctionCreateAuctionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuctionService"
+        ]
+      }
+    },
+    "/api/v1/auctions/{id}": {
+      "get": {
+        "operationId": "AuctionService_GetAuction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/auctionGetAuctionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "AuctionService"
+        ]
+      },
+      "put": {
+        "operationId": "AuctionService_UpdateAuction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/auctionUpdateAuctionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AuctionServiceUpdateAuctionBody"
+            }
+          }
+        ],
+        "tags": [
+          "AuctionService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "AuctionServiceUpdateAuctionBody": {
+      "type": "object",
+      "properties": {
+        "startPrice": {
+          "type": "number",
+          "format": "double"
+        },
+        "minStep": {
+          "type": "number",
+          "format": "double"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "auctionAuction": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "lotId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "startPrice": {
+          "type": "number",
+          "format": "double"
+        },
+        "minStep": {
+          "type": "number",
+          "format": "double"
+        },
+        "currentPrice": {
+          "type": "number",
+          "format": "double"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string"
+        },
+        "winnerId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "winnerBidId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "auctionCreateAuctionRequest": {
+      "type": "object",
+      "properties": {
+        "lotId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "startPrice": {
+          "type": "number",
+          "format": "double"
+        },
+        "minStep": {
+          "type": "number",
+          "format": "double"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "auctionCreateAuctionResponse": {
+      "type": "object",
+      "properties": {
+        "auction": {
+          "$ref": "#/definitions/auctionAuction"
+        }
+      }
+    },
+    "auctionGetAuctionResponse": {
+      "type": "object",
+      "properties": {
+        "auction": {
+          "$ref": "#/definitions/auctionAuction"
+        }
+      }
+    },
+    "auctionListAuctionsResponse": {
+      "type": "object",
+      "properties": {
+        "auctions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/auctionAuction"
+          }
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "auctionUpdateAuctionResponse": {
+      "type": "object",
+      "properties": {
+        "auction": {
+          "$ref": "#/definitions/auctionAuction"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
