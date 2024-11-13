@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package auction;
+
+option go_package = "auction-system/pkg/api";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service BidService {
+    rpc PlaceBid(PlaceBidRequest) returns (PlaceBidResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/bids"
+            body: "*"
+        };
+    }
+    
+    rpc GetBid(GetBidRequest) returns (GetBidResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/bids/{id}"
+        };
+    }
+    
+    rpc ListBids(ListBidsRequest) returns (ListBidsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/bids"
+        };
+    }
+}
+
+message Bid {
+    int64 id = 1;
+    int64 auction_id = 2;
+    int64 user_id = 3;
+    double amount = 4;
+    google.protobuf.Timestamp created_at = 5;
+    google.protobuf.Timestamp updated_at = 6;
+}
+
+message PlaceBidRequest {
+    int64 auction_id = 1;
+    int64 user_id = 2;
+    double amount = 3;
+}
+
+message PlaceBidResponse {
+    Bid bid = 1;
+}
+
+message GetBidRequest {
+    int64 id = 1;
+}
+
+message GetBidResponse {
+    Bid bid = 1;
+}
+
+message ListBidsRequest {
+    int64 auction_id = 1;
+    int32 page_size = 2;
+    int32 page_number = 3;
+}
+
+message ListBidsResponse {
+    repeated Bid bids = 1;
+    int64 total_count = 2;
+}
