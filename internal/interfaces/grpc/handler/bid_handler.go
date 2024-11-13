@@ -12,20 +12,20 @@ import (
 
 type BidHandler struct {
     pb.UnimplementedBidServiceServer
-    placeBidUseCase *bidUseCase.PlaceBidUseCase
-    getBidUseCase   *bidUseCase.GetBidUseCase
-    listBidsUseCase *bidUseCase.ListBidsUseCase
+    PlaceBidUseCase bidUseCase.PlaceBidUseCaseInterface
+    GetBidUseCase   bidUseCase.GetBidUseCaseInterface
+    ListBidsUseCase bidUseCase.ListBidsUseCaseInterface
 }
 
 func NewBidHandler(
-    placeBidUseCase *bidUseCase.PlaceBidUseCase,
-    getBidUseCase *bidUseCase.GetBidUseCase,
-    listBidsUseCase *bidUseCase.ListBidsUseCase,
+    placeBidUseCase bidUseCase.PlaceBidUseCaseInterface,
+    getBidUseCase bidUseCase.GetBidUseCaseInterface,
+    listBidsUseCase bidUseCase.ListBidsUseCaseInterface,
 ) *BidHandler {
     return &BidHandler{
-        placeBidUseCase: placeBidUseCase,
-        getBidUseCase:   getBidUseCase,
-        listBidsUseCase: listBidsUseCase,
+        PlaceBidUseCase: placeBidUseCase,
+        GetBidUseCase:   getBidUseCase,
+        ListBidsUseCase: listBidsUseCase,
     }
 }
 
@@ -36,7 +36,7 @@ func (h *BidHandler) PlaceBid(ctx context.Context, req *pb.PlaceBidRequest) (*pb
         Amount:    req.Amount,
     }
 
-    result, err := h.placeBidUseCase.Execute(ctx, placeBidReq)
+    result, err := h.PlaceBidUseCase.Execute(ctx, placeBidReq)
     if err != nil {
         return nil, status.Error(codes.Internal, err.Error())
     }
@@ -47,7 +47,7 @@ func (h *BidHandler) PlaceBid(ctx context.Context, req *pb.PlaceBidRequest) (*pb
 }
 
 func (h *BidHandler) GetBid(ctx context.Context, req *pb.GetBidRequest) (*pb.GetBidResponse, error) {
-    result, err := h.getBidUseCase.Execute(ctx, req.Id)
+    result, err := h.GetBidUseCase.Execute(ctx, req.Id)
     if err != nil {
         return nil, status.Error(codes.Internal, err.Error())
     }
@@ -64,7 +64,7 @@ func (h *BidHandler) ListBids(ctx context.Context, req *pb.ListBidsRequest) (*pb
         PageNumber: int(req.PageNumber),
     }
 
-    result, err := h.listBidsUseCase.Execute(ctx, listBidsReq)
+    result, err := h.ListBidsUseCase.Execute(ctx, listBidsReq)
     if err != nil {
         return nil, status.Error(codes.Internal, err.Error())
     }

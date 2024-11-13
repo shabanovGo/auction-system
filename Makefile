@@ -1,4 +1,4 @@
-.PHONY: up down migrate postgres recreate-db build logs
+.PHONY: up down migrate postgres recreate-db build logs test test-verbose test-coverage
 
 DC=docker compose
 DB_USER=auction_user
@@ -80,8 +80,14 @@ app-logs:
 db-logs:
 	$(DC) logs -f postgres
 
-start: build up migrate seed
+start: migrate seed build up
 
 reset-db: recreate-db migrate seed
+
+test:
+	go test ./internal/tests/...
+
+test-verbose:
+	go test -v ./internal/tests/...
 
 .DEFAULT_GOAL := start
