@@ -22,7 +22,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Основная модель лота
 type Lot struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -116,7 +115,6 @@ func (x *Lot) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// Запрос на создание лота
 type CreateLotRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -186,7 +184,6 @@ func (x *CreateLotRequest) GetCreatorId() int64 {
 	return 0
 }
 
-// Ответ на создание лота
 type CreateLotResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -232,7 +229,6 @@ func (x *CreateLotResponse) GetLot() *Lot {
 	return nil
 }
 
-// Запрос на получение лота
 type GetLotRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -278,7 +274,6 @@ func (x *GetLotRequest) GetId() int64 {
 	return 0
 }
 
-// Ответ на получение лота
 type GetLotResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -324,7 +319,6 @@ func (x *GetLotResponse) GetLot() *Lot {
 	return nil
 }
 
-// Запрос на обновление лота
 type UpdateLotRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -394,7 +388,6 @@ func (x *UpdateLotRequest) GetStartPrice() float64 {
 	return 0
 }
 
-// Ответ на обновление лота
 type UpdateLotResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -440,7 +433,6 @@ func (x *UpdateLotResponse) GetLot() *Lot {
 	return nil
 }
 
-// Запрос на удаление лота
 type DeleteLotRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -486,7 +478,6 @@ func (x *DeleteLotRequest) GetId() int64 {
 	return 0
 }
 
-// Ответ на удаление лота
 type DeleteLotResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -532,14 +523,13 @@ func (x *DeleteLotResponse) GetSuccess() bool {
 	return false
 }
 
-// Запрос на получение списка лотов
 type ListLotsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	PageSize   int32 `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`       // Размер страницы
-	PageNumber int32 `protobuf:"varint,2,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"` // Номер страницы
+	PageSize   int32 `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageNumber int32 `protobuf:"varint,2,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
 }
 
 func (x *ListLotsRequest) Reset() {
@@ -586,14 +576,13 @@ func (x *ListLotsRequest) GetPageNumber() int32 {
 	return 0
 }
 
-// Ответ со списком лотов
 type ListLotsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Lots       []*Lot `protobuf:"bytes,1,rep,name=lots,proto3" json:"lots,omitempty"`                                // Список лотов
-	TotalCount int32  `protobuf:"varint,2,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"` // Общее количество лотов
+	Lots       []*Lot `protobuf:"bytes,1,rep,name=lots,proto3" json:"lots,omitempty"`
+	TotalCount int32  `protobuf:"varint,2,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
 }
 
 func (x *ListLotsResponse) Reset() {

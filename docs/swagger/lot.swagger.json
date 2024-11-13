@@ -18,7 +18,6 @@
   "paths": {
     "/api/v1/lots": {
       "get": {
-        "summary": "Получение списка лотов с пагинацией",
         "operationId": "LotService_ListLots",
         "responses": {
           "200": {
@@ -37,7 +36,6 @@
         "parameters": [
           {
             "name": "pageSize",
-            "description": "Размер страницы",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -45,7 +43,6 @@
           },
           {
             "name": "pageNumber",
-            "description": "Номер страницы",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -57,7 +54,6 @@
         ]
       },
       "post": {
-        "summary": "Создание нового лота",
         "operationId": "LotService_CreateLot",
         "responses": {
           "200": {
@@ -90,7 +86,6 @@
     },
     "/api/v1/lots/{id}": {
       "get": {
-        "summary": "Получение лота по ID",
         "operationId": "LotService_GetLot",
         "responses": {
           "200": {
@@ -120,7 +115,6 @@
         ]
       },
       "delete": {
-        "summary": "Удаление лота",
         "operationId": "LotService_DeleteLot",
         "responses": {
           "200": {
@@ -150,7 +144,6 @@
         ]
       },
       "put": {
-        "summary": "Обновление лота",
         "operationId": "LotService_UpdateLot",
         "responses": {
           "200": {
@@ -203,8 +196,7 @@
           "type": "number",
           "format": "double"
         }
-      },
-      "title": "Запрос на обновление лота"
+      }
     },
     "auctionCreateLotRequest": {
       "type": "object",
@@ -223,8 +215,7 @@
           "type": "string",
           "format": "int64"
         }
-      },
-      "title": "Запрос на создание лота"
+      }
     },
     "auctionCreateLotResponse": {
       "type": "object",
@@ -232,8 +223,7 @@
         "lot": {
           "$ref": "#/definitions/auctionLot"
         }
-      },
-      "title": "Ответ на создание лота"
+      }
     },
     "auctionDeleteLotResponse": {
       "type": "object",
@@ -241,8 +231,7 @@
         "success": {
           "type": "boolean"
         }
-      },
-      "title": "Ответ на удаление лота"
+      }
     },
     "auctionGetLotResponse": {
       "type": "object",
@@ -250,8 +239,7 @@
         "lot": {
           "$ref": "#/definitions/auctionLot"
         }
-      },
-      "title": "Ответ на получение лота"
+      }
     },
     "auctionListLotsResponse": {
       "type": "object",
@@ -261,16 +249,13 @@
           "items": {
             "type": "object",
             "$ref": "#/definitions/auctionLot"
-          },
-          "title": "Список лотов"
+          }
         },
         "totalCount": {
           "type": "integer",
-          "format": "int32",
-          "title": "Общее количество лотов"
+          "format": "int32"
         }
-      },
-      "title": "Ответ со списком лотов"
+      }
     },
     "auctionLot": {
       "type": "object",
@@ -301,8 +286,7 @@
           "type": "string",
           "format": "date-time"
         }
-      },
-      "title": "Основная модель лота"
+      }
     },
     "auctionUpdateLotResponse": {
       "type": "object",
@@ -310,8 +294,7 @@
         "lot": {
           "$ref": "#/definitions/auctionLot"
         }
-      },
-      "title": "Ответ на обновление лота"
+      }
     },
     "protobufAny": {
       "type": "object",

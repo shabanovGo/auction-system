@@ -29,18 +29,11 @@ const (
 // LotServiceClient is the client API for LotService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// Сервис для работы с лотами
 type LotServiceClient interface {
-	// Создание нового лота
 	CreateLot(ctx context.Context, in *CreateLotRequest, opts ...grpc.CallOption) (*CreateLotResponse, error)
-	// Получение лота по ID
 	GetLot(ctx context.Context, in *GetLotRequest, opts ...grpc.CallOption) (*GetLotResponse, error)
-	// Обновление лота
 	UpdateLot(ctx context.Context, in *UpdateLotRequest, opts ...grpc.CallOption) (*UpdateLotResponse, error)
-	// Удаление лота
 	DeleteLot(ctx context.Context, in *DeleteLotRequest, opts ...grpc.CallOption) (*DeleteLotResponse, error)
-	// Получение списка лотов с пагинацией
 	ListLots(ctx context.Context, in *ListLotsRequest, opts ...grpc.CallOption) (*ListLotsResponse, error)
 }
 
@@ -105,18 +98,11 @@ func (c *lotServiceClient) ListLots(ctx context.Context, in *ListLotsRequest, op
 // LotServiceServer is the server API for LotService service.
 // All implementations must embed UnimplementedLotServiceServer
 // for forward compatibility.
-//
-// Сервис для работы с лотами
 type LotServiceServer interface {
-	// Создание нового лота
 	CreateLot(context.Context, *CreateLotRequest) (*CreateLotResponse, error)
-	// Получение лота по ID
 	GetLot(context.Context, *GetLotRequest) (*GetLotResponse, error)
-	// Обновление лота
 	UpdateLot(context.Context, *UpdateLotRequest) (*UpdateLotResponse, error)
-	// Удаление лота
 	DeleteLot(context.Context, *DeleteLotRequest) (*DeleteLotResponse, error)
-	// Получение списка лотов с пагинацией
 	ListLots(context.Context, *ListLotsRequest) (*ListLotsResponse, error)
 	mustEmbedUnimplementedLotServiceServer()
 }
