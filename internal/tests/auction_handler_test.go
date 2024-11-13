@@ -16,7 +16,6 @@ import (
     auctionUC "auction-system/internal/application/usecase/auction"
 )
 
-// Моки для юзкейсов
 type mockCreateAuctionUC struct {
     mock.Mock
 }
@@ -65,7 +64,6 @@ func (m *mockListAuctionsUC) Execute(ctx context.Context, page, pageSize int, st
     return args.Get(0).(*dto.ListAuctionsResponse), args.Error(1)
 }
 
-// Вспомогательные функции
 func createTestAuctionResponse() *dto.AuctionResponse {
     winnerID := int64(1)
     winnerBidID := int64(1)
@@ -86,13 +84,11 @@ func createTestAuctionResponse() *dto.AuctionResponse {
     }
 }
 
-// Добавляем реализацию интерфейсов
 var _ auctionUC.CreateAuctionUseCaseInterface = (*mockCreateAuctionUC)(nil)
 var _ auctionUC.GetAuctionUseCaseInterface = (*mockGetAuctionUC)(nil)
 var _ auctionUC.UpdateAuctionUseCaseInterface = (*mockUpdateAuctionUC)(nil)
 var _ auctionUC.ListAuctionsUseCaseInterface = (*mockListAuctionsUC)(nil)
 
-// Тесты
 func TestCreateAuction(t *testing.T) {
     mockUC := new(mockCreateAuctionUC)
     h := &handler.AuctionHandler{
