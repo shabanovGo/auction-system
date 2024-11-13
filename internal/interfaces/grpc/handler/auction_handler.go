@@ -13,23 +13,23 @@ import (
 
 type AuctionHandler struct {
     pb.UnimplementedAuctionServiceServer
-    createAuctionUC *auctionUseCase.CreateAuctionUseCase
-    getAuctionUC    *auctionUseCase.GetAuctionUseCase
-    updateAuctionUC *auctionUseCase.UpdateAuctionUseCase
-    listAuctionsUC  *auctionUseCase.ListAuctionsUseCase
+    CreateAuctionUC auctionUseCase.CreateAuctionUseCaseInterface
+    GetAuctionUC    auctionUseCase.GetAuctionUseCaseInterface
+    UpdateAuctionUC auctionUseCase.UpdateAuctionUseCaseInterface
+    ListAuctionsUC  auctionUseCase.ListAuctionsUseCaseInterface
 }
 
 func NewAuctionHandler(
-    createAuctionUC *auctionUseCase.CreateAuctionUseCase,
-    getAuctionUC *auctionUseCase.GetAuctionUseCase,
-    updateAuctionUC *auctionUseCase.UpdateAuctionUseCase,
-    listAuctionsUC *auctionUseCase.ListAuctionsUseCase,
+    createAuctionUC auctionUseCase.CreateAuctionUseCaseInterface,
+    getAuctionUC auctionUseCase.GetAuctionUseCaseInterface,
+    updateAuctionUC auctionUseCase.UpdateAuctionUseCaseInterface,
+    listAuctionsUC auctionUseCase.ListAuctionsUseCaseInterface,
 ) *AuctionHandler {
     return &AuctionHandler{
-        createAuctionUC: createAuctionUC,
-        getAuctionUC:    getAuctionUC,
-        updateAuctionUC: updateAuctionUC,
-        listAuctionsUC:  listAuctionsUC,
+        CreateAuctionUC: createAuctionUC,
+        GetAuctionUC:    getAuctionUC,
+        UpdateAuctionUC: updateAuctionUC,
+        ListAuctionsUC:  listAuctionsUC,
     }
 }
 
@@ -42,24 +42,24 @@ func (h *AuctionHandler) CreateAuction(ctx context.Context, req *pb.CreateAuctio
         EndTime:    req.EndTime.AsTime(),
     }
 
-    result, err := h.createAuctionUC.Execute(ctx, createReq)
+    result, err := h.CreateAuctionUC.Execute(ctx, createReq)
     if err != nil {
         return nil, grpcStatus.Error(codes.Internal, err.Error())
     }
 
     return &pb.CreateAuctionResponse{
-        Auction: mapAuctionToProto(result),
+        Auction: MapAuctionToProto(result),
     }, nil
 }
 
 func (h *AuctionHandler) GetAuction(ctx context.Context, req *pb.GetAuctionRequest) (*pb.GetAuctionResponse, error) {
-    result, err := h.getAuctionUC.Execute(ctx, req.Id)
+    result, err := h.GetAuctionUC.Execute(ctx, req.Id)
     if err != nil {
         return nil, grpcStatus.Error(codes.Internal, err.Error())
     }
 
     return &pb.GetAuctionResponse{
-        Auction: mapAuctionToProto(result),
+        Auction: MapAuctionToProto(result),
     }, nil
 }
 
@@ -79,13 +79,13 @@ func (h *AuctionHandler) UpdateAuction(ctx context.Context, req *pb.UpdateAuctio
         Status:     &auctionStatus,
     }
 
-    result, err := h.updateAuctionUC.Execute(ctx, req.Id, updateReq)
+    result, err := h.UpdateAuctionUC.Execute(ctx, req.Id, updateReq)
     if err != nil {
         return nil, grpcStatus.Error(codes.Internal, err.Error())
     }
 
     return &pb.UpdateAuctionResponse{
-        Auction: mapAuctionToProto(result),
+        Auction: MapAuctionToProto(result),
     }, nil
 }
 
@@ -96,14 +96,14 @@ func (h *AuctionHandler) ListAuctions(ctx context.Context, req *pb.ListAuctionsR
         auctionStatus = &s
     }
 
-    result, err := h.listAuctionsUC.Execute(ctx, int(req.PageNumber), int(req.PageSize), auctionStatus)
+    result, err := h.ListAuctionsUC.Execute(ctx, int(req.PageNumber), int(req.PageSize), auctionStatus)
     if err != nil {
         return nil, grpcStatus.Error(codes.Internal, err.Error())
     }
 
     auctions := make([]*pb.Auction, len(result.Auctions))
     for i, a := range result.Auctions {
-        auctions[i] = mapAuctionToProto(&a)
+        auctions[i] = MapAuctionToProto(&a)
     }
 
     return &pb.ListAuctionsResponse{
@@ -112,7 +112,7 @@ func (h *AuctionHandler) ListAuctions(ctx context.Context, req *pb.ListAuctionsR
     }, nil
 }
 
-func mapAuctionToProto(a *dto.AuctionResponse) *pb.Auction {
+func MapAuctionToProto(a *dto.AuctionResponse) *pb.Auction {
     var winnerID, winnerBidID int64
     if a.WinnerID != nil {
         winnerID = *a.WinnerID
