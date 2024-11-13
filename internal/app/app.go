@@ -2,103 +2,206 @@ package app
 
 import (
     "context"
-    "fmt"
-    "log"
-    "net"
-    "net/http"
-    "os"
-    "os/signal"
-    "syscall"
+    "database/sql"
+    _ "github.com/lib/pq"
 
-    "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-    "google.golang.org/grpc"
-    "google.golang.org/grpc/credentials/insecure"
-    
     "auction-system/internal/config"
-    "auction-system/internal/interfaces/grpc/handler"
-    pb "auction-system/pkg/api"
+    "auction-system/internal/infrastructure/persistence/postgres"
+    userUseCase "auction-system/internal/application/usecase/user"
+    lotUseCase "auction-system/internal/application/usecase/lot"
+    auctionUseCase "auction-system/internal/application/usecase/auction"
+    bidUseCase "auction-system/internal/application/usecase/bid"
+    handler "auction-system/internal/interfaces/grpc/handler"
+    "auction-system/internal/worker"
+    notificationDomain "auction-system/internal/domain/notification"
+    notificationInfra "auction-system/internal/infrastructure/notification"
 )
 
 type App struct {
     cfg      *config.Config
+    db       *sql.DB
     handlers *handler.Handlers
-    grpcServer *grpc.Server
-    httpServer *http.Server
+    worker   *worker.Worker
 }
 
-func NewApp(
-    cfg *config.Config,
-    handlers *handler.Handlers,
-) *App {
+func NewApp(cfg *config.Config) (*App, error) {
+    db, err := initDatabase(cfg)
+    if err != nil {
+        return nil, err
+    }
+
+    repos := initRepositories(db)
+    services := initServices()
+    useCases := initUseCases(repos)
+    handlers := initHandlers(useCases)
+    worker := initWorker(repos, services)
+
     return &App{
         cfg:      cfg,
+        db:       db,
         handlers: handlers,
-    }
+        worker:   worker,
+    }, nil
 }
 
 func (a *App) Run(ctx context.Context) error {
-    a.grpcServer = grpc.NewServer()
-    pb.RegisterUserServiceServer(a.grpcServer, a.handlers.UserHandler)
-    pb.RegisterLotServiceServer(a.grpcServer, a.handlers.LotHandler)
-    pb.RegisterAuctionServiceServer(a.grpcServer, a.handlers.AuctionHandler)
-    // pb.RegisterBidServiceServer(a.grpcServer, a.handlers.BidHandler)
-		
+    go a.worker.Start(ctx)
 
-    grpcListener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", a.cfg.GRPC.Host, a.cfg.GRPC.Port))
+    return a.handlers.Serve(ctx, a.cfg)
+}
+
+func (a *App) Shutdown(ctx context.Context) error {
+    if err := a.handlers.Shutdown(ctx); err != nil {
+        return err
+    }
+    return a.db.Close()
+}
+
+func initDatabase(cfg *config.Config) (*sql.DB, error) {
+    db, err := sql.Open("postgres", cfg.Database.GetDSN())
     if err != nil {
-        return fmt.Errorf("failed to listen grpc: %v", err)
+        return nil, err
     }
-
-    go func() {
-        log.Printf("Starting gRPC server on %s:%d", a.cfg.GRPC.Host, a.cfg.GRPC.Port)
-        if err := a.grpcServer.Serve(grpcListener); err != nil {
-            log.Fatalf("Failed to serve gRPC: %v", err)
-        }
-    }()
-
-    mux := runtime.NewServeMux()
-    opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-    
-    endpoint := fmt.Sprintf("%s:%d", a.cfg.GRPC.Host, a.cfg.GRPC.Port)
-    
-    if err := pb.RegisterUserServiceHandlerFromEndpoint(ctx, mux, endpoint, opts); err != nil {
-        return fmt.Errorf("failed to register user service handler: %v", err)
+    if err := db.Ping(); err != nil {
+        return nil, err
     }
-    
-    if err := pb.RegisterLotServiceHandlerFromEndpoint(ctx, mux, endpoint, opts); err != nil {
-        return fmt.Errorf("failed to register lot service handler: %v", err)
+    return db, nil
+}
+
+type repositories struct {
+    userRepo    *postgres.UserRepository
+    lotRepo     *postgres.LotRepository
+    auctionRepo *postgres.AuctionRepository
+    bidRepo     *postgres.BidRepository
+}
+
+func initRepositories(db *sql.DB) *repositories {
+    return &repositories{
+        userRepo:    postgres.NewUserRepository(db),
+        lotRepo:     postgres.NewLotRepository(db),
+        auctionRepo: postgres.NewAuctionRepository(db),
+        bidRepo:     postgres.NewBidRepository(db),
     }
+}
 
-    if err := pb.RegisterAuctionServiceHandlerFromEndpoint(ctx, mux, endpoint, opts); err != nil {
-        return fmt.Errorf("failed to register auction service handler: %v", err)
+type useCases struct {
+    user    *userUseCases
+    lot     *lotUseCases
+    auction *auctionUseCases
+    bid     *bidUseCases
+}
+
+type userUseCases struct {
+    create        *userUseCase.CreateUserUseCase
+    get          *userUseCase.GetUserUseCase
+    update       *userUseCase.UpdateUserUseCase
+    delete       *userUseCase.DeleteUserUseCase
+    getAll       *userUseCase.GetAllUserUseCase
+    updateBalance *userUseCase.UpdateBalanceUseCase
+}
+
+type lotUseCases struct {
+    create  *lotUseCase.CreateLotUseCase
+    get     *lotUseCase.GetLotUseCase
+    update  *lotUseCase.UpdateLotUseCase
+    delete  *lotUseCase.DeleteLotUseCase
+    getAll  *lotUseCase.GetLotsUseCase
+}
+
+type auctionUseCases struct {
+    create  *auctionUseCase.CreateAuctionUseCase
+    get     *auctionUseCase.GetAuctionUseCase
+    update  *auctionUseCase.UpdateAuctionUseCase
+    list    *auctionUseCase.ListAuctionsUseCase
+}
+
+type bidUseCases struct {
+    place   *bidUseCase.PlaceBidUseCase
+    get     *bidUseCase.GetBidUseCase
+    list    *bidUseCase.ListBidsUseCase
+}
+
+type services struct {
+    notifier notificationDomain.NotificationService
+}
+
+func initServices() *services {
+    return &services{
+        notifier: notificationInfra.NewMockNotificationAdapter(),
     }
+}
 
-    // if err := pb.RegisterBidServiceHandlerFromEndpoint(ctx, mux, endpoint, opts); err != nil {
-    //     return fmt.Errorf("failed to register bid service handler: %v", err)
-    // }
-
-    a.httpServer = &http.Server{
-        Addr:    fmt.Sprintf("%s:%d", a.cfg.HTTP.Host, a.cfg.HTTP.Port),
-        Handler: mux,
+func initUseCases(repos *repositories) *useCases {
+    return &useCases{
+        user: &userUseCases{
+            create:        userUseCase.NewCreateUserUseCase(repos.userRepo),
+            get:          userUseCase.NewGetUserUseCase(repos.userRepo),
+            update:       userUseCase.NewUpdateUserUseCase(repos.userRepo),
+            delete:       userUseCase.NewDeleteUserUseCase(repos.userRepo),
+            getAll:       userUseCase.NewGetAllUserUseCase(repos.userRepo),
+            updateBalance: userUseCase.NewUpdateBalanceUseCase(repos.userRepo),
+        },
+        lot: &lotUseCases{
+            create:  lotUseCase.NewCreateLotUseCase(repos.lotRepo),
+            get:     lotUseCase.NewGetLotUseCase(repos.lotRepo),
+            update:  lotUseCase.NewUpdateLotUseCase(repos.lotRepo),
+            delete:  lotUseCase.NewDeleteLotUseCase(repos.lotRepo),
+            getAll:  lotUseCase.NewGetLotsUseCase(repos.lotRepo),
+        },
+        auction: &auctionUseCases{
+            create:  auctionUseCase.NewCreateAuctionUseCase(repos.auctionRepo, repos.lotRepo),
+            get:     auctionUseCase.NewGetAuctionUseCase(repos.auctionRepo),
+            update:  auctionUseCase.NewUpdateAuctionUseCase(repos.auctionRepo),
+            list:    auctionUseCase.NewListAuctionsUseCase(repos.auctionRepo),
+        },
+        bid: &bidUseCases{
+            place:   bidUseCase.NewPlaceBidUseCase(repos.bidRepo, repos.auctionRepo, repos.userRepo),
+            get:     bidUseCase.NewGetBidUseCase(repos.bidRepo),
+            list:    bidUseCase.NewListBidsUseCase(repos.bidRepo),
+        },
     }
+}
 
-    go func() {
-        log.Printf("Starting HTTP server on %s:%d", a.cfg.HTTP.Host, a.cfg.HTTP.Port)
-        if err := a.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-            log.Fatalf("Failed to serve HTTP: %v", err)
-        }
-    }()
+func initHandlers(uc *useCases) *handler.Handlers {
+    userHandler := handler.NewUserHandler(
+        uc.user.create,
+        uc.user.get,
+        uc.user.update,
+        uc.user.delete,
+        uc.user.getAll,
+        uc.user.updateBalance,
+    )
 
-    quit := make(chan os.Signal, 1)
-    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-    <-quit
+    lotHandler := handler.NewLotHandler(
+        uc.lot.create,
+        uc.lot.get,
+        uc.lot.update,
+        uc.lot.delete,
+        uc.lot.getAll,
+    )
 
-    log.Println("Shutting down servers...")
+    auctionHandler := handler.NewAuctionHandler(
+        uc.auction.create,
+        uc.auction.get,
+        uc.auction.update,
+        uc.auction.list,
+    )
 
-    a.grpcServer.GracefulStop()
-    if err := a.httpServer.Shutdown(ctx); err != nil {
-        log.Printf("HTTP server shutdown error: %v", err)
-    }
+    bidHandler := handler.NewBidHandler(
+        uc.bid.place,
+        uc.bid.get,
+        uc.bid.list,
+    )
 
-    return nil
+    return handler.NewHandlers(userHandler, auctionHandler, lotHandler, bidHandler)
+}
+
+func initWorker(repos *repositories, services *services) *worker.Worker {
+    return worker.NewWorker(
+        repos.auctionRepo,
+        repos.lotRepo,
+        repos.userRepo,
+        repos.bidRepo,
+        services.notifier,
+    )
 }

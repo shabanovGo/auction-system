@@ -47,7 +47,6 @@ seed:
 	docker exec -i $$(docker ps -q -f name=postgres) psql -U $(DB_USER) -d $(DB_NAME) < scripts/seed.sql
 	@echo "Database seeded successfully!"
 
-init: down migrate seed rebuild
 
 PROTO_DIR=api/proto
 GO_OUT_DIR=pkg/api
